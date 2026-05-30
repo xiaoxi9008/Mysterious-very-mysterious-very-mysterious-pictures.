@@ -727,9 +727,7 @@ function Patriot:Notify(title, message, duration, iconType)
     local notifGui = Instance.new("ScreenGui")
     notifGui.ResetOnSpawn = false
     notifGui.DisplayOrder = 999999
-    notifGui.Parent = hui
-
-    local frame = Instance.new("Frame")
+    notifGui.Parent = hui    local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, width, 0, height)
     frame.Position = UDim2.new(1, width + 20, 1, -15)
     frame.AnchorPoint = Vector2.new(1, 1)
@@ -744,14 +742,14 @@ function Patriot:Notify(title, message, duration, iconType)
     stroke.Transparency = 0.7
 
     local progressBg = Instance.new("Frame")
-    progressBg.Size = UDim2.new(1, 0, 0, 2)
+    progressBg.Size = UDim2.new(0.8, 0, 0, 2)
     progressBg.Position = UDim2.new(0, 0, 1, -2)
     progressBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     progressBg.BorderSizePixel = 0
     progressBg.Parent = frame
 
     local progressBar = Instance.new("Frame")
-    progressBar.Size = UDim2.new(1, 0, 1, 0)
+    progressBar.Size = UDim2.new(0.8, 0, 1, 0)
     progressBar.BackgroundColor3 = Patriot.Theme.Accent
     progressBar.BorderSizePixel = 0
     progressBar.Parent = progressBg
