@@ -727,7 +727,9 @@ function Patriot:Notify(title, message, duration, iconType)
     local notifGui = Instance.new("ScreenGui")
     notifGui.ResetOnSpawn = false
     notifGui.DisplayOrder = 999999
-    notifGui.Parent = hui    local frame = Instance.new("Frame")
+    notifGui.Parent = hui
+
+    local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, width, 0, height)
     frame.Position = UDim2.new(1, width + 20, 1, -15)
     frame.AnchorPoint = Vector2.new(1, 1)
