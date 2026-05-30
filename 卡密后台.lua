@@ -111,13 +111,13 @@ local Internal = {
     IconsLoaded = false
 }
 
-local IconBaseURL = "https://raw.githubusercontent.com/SyndromeXph/expert-octo-doodle/main/Icons/"
+local IconBaseURL = "https://github.com/Cobruhehe/expert-octo-doodle/tree/main/"
 local IconFiles = {
     key = "lucide--key.png",
     shield = "lucide--shield-minus.png",
     check = "prime--check-square.png",
     copy = "flowbite--clipboard-outline.png",
-    discord = "qlementine-icons--discord-16.png",
+    discord = "mmexport1780128756921.png",
     alert = "mdi--alert-octagon-outline.png",
     lock = "lucide--user-lock.png",
     loading = "nonicons--loading-16.png",
@@ -2021,7 +2021,7 @@ local function BuildKeyUI()
         else Patriot:Notify("错误", "未设置密钥链接", 3, "warning") end
     end)
     discordBtn.MouseButton1Click:Connect(function()
-        if Patriot.Links.Discord ~= "" then Patriot:Notify("Discord", "邀请链接已复制", 2, "discord") pcall(function() setclipboard(Patriot.Links.Discord) end) end
+        if Patriot.Links.Discord ~= "" then Patriot:Notify("QQ主群", "邀请链接已复制", 2, "discord") pcall(function() setclipboard(Patriot.Links.Discord) end) end
     end)
     textBox.FocusLost:Connect(function(enter) if enter then handleRedeem() end end)
 
