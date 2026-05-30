@@ -1,26 +1,8 @@
---[[
- ________   ________   ________   _______    ___        ___  ___   ___     
-|\   __  \ |\   __  \ |\   __  \ |\  ___ \  |\  \      |\  \|\  \ |\  \    
-\ \  \|\  \\ \  \|\  \\ \  \|\  \\ \   __/| \ \  \     \ \  \\\  \\ \  \   
- \ \   __  \\ \   _  _\\ \  \\\  \\ \  \_|/__\ \  \     \ \  \\\  \\ \  \  
-  \ \  \ \  \\ \  \\  \|\ \  \\\  \\ \  \_|\ \\ \  \____ \ \  \\\  \\ \  \ 
-   \ \__\ \__\\ \__\\ _\ \ \_____  \\ \_______\\ \_______\\ \_______\\ \__\
-    \|__|\|__| \|__|\|__| \|___| \__\\|_______| \|_______| \|_______| \|__|
-                                \|__|                                      
-                                                                           
-
-     Github - https://github.com/SyndromeXph/expert-octo-doodle/tree/main
-     作者: Cobru (Cobruhehe, .cobru)
-     修改者: Yuxingchen
-     许可证: MIT
-]]
-
 repeat task.wait() until game:IsLoaded()
 
 local cloneref = cloneref or function(obj) return obj end
 local gethui = gethui or function() return cloneref(game:GetService("CoreGui")) end
 
--- 服务
 local TweenService = cloneref(game:GetService("TweenService"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 local HttpService = cloneref(game:GetService("HttpService"))
@@ -38,7 +20,6 @@ getgenv().PatriotClosed = false
 
 local Patriot = {}
 
--- 外观设置
 Patriot.Appearance = {
     Title = "验证系统",
     Subtitle = "请输入密钥以继续",
@@ -46,26 +27,22 @@ Patriot.Appearance = {
     IconSize = UDim2.new(0, 30, 0, 30)
 }
 
--- 链接
 Patriot.Links = {
     GetKey = "",
     Discord = ""
 }
 
--- 存储
 Patriot.Storage = {
     FileName = "Patriot_Key",
     Remember = true,
     AutoLoad = true
 }
 
--- 选项
 Patriot.Options = {
     Blur = true,
     Draggable = true
 }
 
--- 主题色
 Patriot.Theme = {
     Accent = Color3.fromRGB(139, 0, 0),
     AccentHover = Color3.fromRGB(170, 20, 20),
@@ -84,7 +61,6 @@ Patriot.Theme = {
     Pending = Color3.fromRGB(60, 60, 60)
 }
 
--- 回调函数
 Patriot.Callbacks = {
     OnVerify = nil,
     OnSuccess = nil,
@@ -94,7 +70,6 @@ Patriot.Callbacks = {
 
 Patriot.Changelog = {}
 
--- 商店
 Patriot.Shop = {
     Enabled = false,
     Icon = "",
@@ -104,7 +79,6 @@ Patriot.Shop = {
     Link = ""
 }
 
--- 内部变量
 local Internal = {
     NotificationList = {},
     ValidateFunction = nil,
@@ -753,9 +727,7 @@ function Patriot:Notify(title, message, duration, iconType)
     local notifGui = Instance.new("ScreenGui")
     notifGui.ResetOnSpawn = false
     notifGui.DisplayOrder = 999999
-    notifGui.Parent = hui
-
-    local frame = Instance.new("Frame")
+    notifGui.Parent = hui    local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, width, 0, height)
     frame.Position = UDim2.new(1, width + 20, 1, -15)
     frame.AnchorPoint = Vector2.new(1, 1)
@@ -1151,7 +1123,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     avatarGlow.BackgroundTransparency = 0.5
     avatarGlow.BorderSizePixel = 0
     avatarGlow.Parent = avatarWrapper
-    Instance.new("UICorner", avatarGlow).CornerRadius = UDim.new(0, )
+    Instance.new("UICorner", avatarGlow).CornerRadius = UDim.new(0, 12)
 
     local avatarGlowStroke = Instance.new("UIStroke", avatarGlow)
     avatarGlowStroke.Color = Patriot.Theme.Accent
@@ -1785,7 +1757,6 @@ local function BuildKeyUI()
         discordBtn.Position = UDim2.new(0.5, 22, 0, bottomY)
     end
 
-    -- 商店面板
     if showShop then
         local shopDivider = Instance.new("Frame")
         shopDivider.Size = UDim2.new(1, 0, 0, shopDividerHeight)
