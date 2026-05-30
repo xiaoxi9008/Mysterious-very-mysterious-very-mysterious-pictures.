@@ -44,9 +44,9 @@ Patriot.Appearance = {
     Subtitle = "请输入密钥以继续",
     Icon = "rbxassetid://95721401302279",
     IconSize = UDim2.new(0, 30, 0, 30),
-    -- 自定义背景图片ID (设置为空字符串则使用纯色背景)
-    BackgroundImage = "rbxassetid://87099566895194",  -- 使用你提供的图片ID
-    BackgroundTransparency = 0.85  -- 背景透明度 (0-1, 0为完全不透明, 1为完全透明)
+    -- 自定义背景图片ID
+    BackgroundImage = "rbxassetid://87099566895194",
+    BackgroundTransparency = 0.75
 }
 
 -- 链接
@@ -66,18 +66,17 @@ Patriot.Storage = {
 Patriot.Options = {
     Blur = true,
     Draggable = true,
-    -- 流动边框动画速度 (秒每循环)
-    BorderSpeed = 3
+    BorderSpeed = 3  -- 流动边框动画速度
 }
 
 -- 主题色
 Patriot.Theme = {
-    Accent = Color3.fromRGB(255, 255, 255),  -- 白色
+    Accent = Color3.fromRGB(255, 255, 255),
     AccentHover = Color3.fromRGB(200, 200, 200),
-    Background = Color3.fromRGB(15, 15, 15),
-    BackgroundTransparency = 0.85,
-    Header = Color3.fromRGB(20, 20, 20),
-    Input = Color3.fromRGB(25, 25, 25),
+    Background = Color3.fromRGB(10, 10, 10),
+    BackgroundTransparency = 0.7,
+    Header = Color3.fromRGB(15, 15, 20),
+    Input = Color3.fromRGB(20, 20, 25),
     Text = Color3.fromRGB(255, 255, 255),
     TextDim = Color3.fromRGB(120, 120, 120),
     Success = Color3.fromRGB(50, 205, 110),
@@ -98,7 +97,24 @@ Patriot.Callbacks = {
     OnClose = nil
 }
 
-Patriot.Changelog = {}
+-- 更新日志示例
+Patriot.Changelog = {
+    {
+        Version = "v1.2.0",
+        Date = "2026-01-15",
+        Changes = {"✨ 新增黑白流动边框效果", "🎨 优化界面圆角显示", "🐛 修复背景显示问题"}
+    },
+    {
+        Version = "v1.1.0", 
+        Date = "2026-01-10",
+        Changes = {"➕ 添加自定义背景支持", "🔄 改进动画流畅度"}
+    },
+    {
+        Version = "v1.0.0",
+        Date = "2026-01-01", 
+        Changes = {"🎉 首次发布", "🔑 支持密钥验证系统"}
+    }
+}
 
 -- 商店
 Patriot.Shop = {
@@ -115,7 +131,8 @@ local Internal = {
     NotificationList = {},
     ValidateFunction = nil,
     IconsLoaded = false,
-    BorderAnimation = nil
+    BorderAnimation = nil,
+    SplashScreen = nil
 }
 
 local IconBaseURL = "https://github.com/Cobruhehe/expert-octo-doodle/tree/main/"
@@ -370,8 +387,10 @@ local function fullCleanup()
     end
     local gui1 = hui:FindFirstChild("PatriotKeySystem")
     local gui3 = hui:FindFirstChild("PatriotLoadingScreen")
+    local splash = hui:FindFirstChild("PatriotSplashScreen")
     if gui1 then gui1:Destroy() end
     if gui3 then gui3:Destroy() end
+    if splash then splash:Destroy() end
 end
 
 local function setupDragging(header, main)
@@ -417,16 +436,16 @@ end
 local function CreateFlowingBorder(parent, cornerRadius)
     local borderContainer = Instance.new("Frame")
     borderContainer.Name = "FlowingBorder"
-    borderContainer.Size = UDim2.new(1, 4, 1, 4)
-    borderContainer.Position = UDim2.new(0, -2, 0, -2)
+    borderContainer.Size = UDim2.new(1, 6, 1, 6)
+    borderContainer.Position = UDim2.new(0, -3, 0, -3)
     borderContainer.BackgroundTransparency = 1
     borderContainer.ZIndex = parent.ZIndex - 1
     borderContainer.Parent = parent
     
-    -- 创建四个方向的渐变条
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 3)
     topBar.Position = UDim2.new(0, 0, 0, 0)
+    topBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     topBar.BackgroundTransparency = 1
     topBar.Parent = borderContainer
     
@@ -436,6 +455,7 @@ local function CreateFlowingBorder(parent, cornerRadius)
     local bottomBar = Instance.new("Frame")
     bottomBar.Size = UDim2.new(1, 0, 0, 3)
     bottomBar.Position = UDim2.new(0, 0, 1, -3)
+    bottomBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     bottomBar.BackgroundTransparency = 1
     bottomBar.Parent = borderContainer
     
@@ -445,6 +465,7 @@ local function CreateFlowingBorder(parent, cornerRadius)
     local leftBar = Instance.new("Frame")
     leftBar.Size = UDim2.new(0, 3, 1, 0)
     leftBar.Position = UDim2.new(0, 0, 0, 0)
+    leftBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     leftBar.BackgroundTransparency = 1
     leftBar.Parent = borderContainer
     
@@ -454,69 +475,42 @@ local function CreateFlowingBorder(parent, cornerRadius)
     local rightBar = Instance.new("Frame")
     rightBar.Size = UDim2.new(0, 3, 1, 0)
     rightBar.Position = UDim2.new(1, -3, 0, 0)
+    rightBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     rightBar.BackgroundTransparency = 1
     rightBar.Parent = borderContainer
     
     local rightGradient = Instance.new("UIGradient", rightBar)
     rightGradient.Rotation = 270
     
-    -- 创建圆角遮罩
     local mask = Instance.new("Frame")
-    mask.Size = UDim2.new(1, -4, 1, -4)
-    mask.Position = UDim2.new(0, 2, 0, 2)
+    mask.Size = UDim2.new(1, -6, 1, -6)
+    mask.Position = UDim2.new(0, 3, 0, 3)
     mask.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     mask.BackgroundTransparency = 0.5
     mask.BorderSizePixel = 0
     mask.Parent = borderContainer
     local maskCorner = Instance.new("UICorner", mask)
-    maskCorner.CornerRadius = UDim.new(0, cornerRadius - 2)
+    maskCorner.CornerRadius = UDim.new(0, cornerRadius - 3)
     
-    -- 动画变量
     local offset = 0
     local speed = Patriot.Options.BorderSpeed or 3
     
-    -- 更新渐变位置
     local function updateGradients()
-        topGradient.Offset = NumberSequence.new({
-            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
-        })
+        local whiteKey = NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1)
+        local blackKey1 = NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0)
+        local blackKey2 = NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0)
+        local blackKey3 = NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0)
+        local blackKey4 = NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
         
-        bottomGradient.Offset = NumberSequence.new({
-            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
-        })
-        
-        leftGradient.Offset = NumberSequence.new({
-            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
-        })
-        
-        rightGradient.Offset = NumberSequence.new({
-            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
-            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
-            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
-        })
+        local seq = NumberSequence.new({blackKey1, whiteKey, blackKey2, blackKey3, whiteKey, blackKey4})
+        topGradient.Offset = seq
+        bottomGradient.Offset = seq
+        leftGradient.Offset = seq
+        rightGradient.Offset = seq
         
         offset = (offset + 0.008) % 1
     end
     
-    -- 启动动画
     local connection
     connection = RunService.Heartbeat:Connect(function()
         if parent and parent.Parent then
@@ -551,6 +545,102 @@ local function ApplyCustomBackground(frame, cornerRadius)
     return nil
 end
 
+-- 开头动画
+local function ShowSplashScreen(callback)
+    local existing = hui:FindFirstChild("PatriotSplashScreen")
+    if existing then existing:Destroy() end
+    
+    local splashGui = Instance.new("ScreenGui")
+    splashGui.Name = "PatriotSplashScreen"
+    splashGui.ResetOnSpawn = false
+    splashGui.IgnoreGuiInset = true
+    splashGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    splashGui.Parent = hui
+    
+    local blur = Instance.new("BlurEffect")
+    blur.Name = "SplashBlur"
+    blur.Size = 0
+    blur.Parent = Lighting
+    
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(1, 0, 1, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    mainFrame.BackgroundTransparency = 1
+    mainFrame.Parent = splashGui
+    
+    local logoContainer = Instance.new("Frame")
+    logoContainer.Size = UDim2.new(0, 200, 0, 200)
+    logoContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+    logoContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+    logoContainer.BackgroundTransparency = 1
+    logoContainer.Parent = mainFrame
+    
+    local logoImg = Instance.new("ImageLabel")
+    logoImg.Size = UDim2.new(0, 120, 0, 120)
+    logoImg.Position = UDim2.new(0.5, 0, 0.5, -30)
+    logoImg.AnchorPoint = Vector2.new(0.5, 0.5)
+    logoImg.BackgroundTransparency = 1
+    logoImg.Image = getLogoIcon()
+    logoImg.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    logoImg.ScaleType = Enum.ScaleType.Fit
+    logoImg.ImageTransparency = 1
+    logoImg.Parent = logoContainer
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(0, 0, 0, 40)
+    titleLabel.AutomaticSize = Enum.AutomaticSize.X
+    titleLabel.Position = UDim2.new(0.5, 0, 0.5, 50)
+    titleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = Patriot.Appearance.Title
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 32
+    titleLabel.Font = Enum.Font.ArimoBold
+    titleLabel.TextTransparency = 1
+    titleLabel.Parent = logoContainer
+    
+    local subtitleLabel = Instance.new("TextLabel")
+    subtitleLabel.Size = UDim2.new(0, 0, 0, 25)
+    subtitleLabel.AutomaticSize = Enum.AutomaticSize.X
+    subtitleLabel.Position = UDim2.new(0.5, 0, 0.5, 85)
+    subtitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+    subtitleLabel.BackgroundTransparency = 1
+    subtitleLabel.Text = "验证系统"
+    subtitleLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    subtitleLabel.TextSize = 18
+    subtitleLabel.Font = Enum.Font.Arimo
+    subtitleLabel.TextTransparency = 1
+    subtitleLabel.Parent = logoContainer
+    
+    TweenService:Create(mainFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0.2}):Play()
+    TweenService:Create(blur, TweenInfo.new(0.5), {Size = 16}):Play()
+    
+    task.wait(0.2)
+    
+    TweenService:Create(logoImg, TweenInfo.new(0.5, Enum.EasingStyle.Back), {ImageTransparency = 0}):Play()
+    TweenService:Create(titleLabel, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    TweenService:Create(subtitleLabel, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    
+    task.wait(0.8)
+    
+    TweenService:Create(logoContainer, TweenInfo.new(0.3), {Position = UDim2.new(0.5, 0, 0.3, 0)}):Play()
+    
+    task.wait(0.5)
+    
+    TweenService:Create(mainFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(blur, TweenInfo.new(0.4), {Size = 0}):Play()
+    TweenService:Create(logoImg, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
+    TweenService:Create(titleLabel, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+    TweenService:Create(subtitleLabel, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+    
+    task.wait(0.5)
+    
+    splashGui:Destroy()
+    blur:Destroy()
+    
+    if callback then callback() end
+end
+
 local function CreateDoorOverlay(parentFrame, width, height)
     local overlay = Instance.new("Frame")
     overlay.Name = "DoorOverlay"
@@ -564,7 +654,7 @@ local function CreateDoorOverlay(parentFrame, width, height)
     leftDoor.Name = "LeftDoor"
     leftDoor.Size = UDim2.new(0.5, 0, 1, 0)
     leftDoor.Position = UDim2.new(0, 0, 0, 0)
-    leftDoor.BackgroundColor3 = Patriot.Theme.Header
+    leftDoor.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     leftDoor.BorderSizePixel = 0
     leftDoor.ZIndex = 51
     leftDoor.Parent = overlay
@@ -573,7 +663,7 @@ local function CreateDoorOverlay(parentFrame, width, height)
     rightDoor.Name = "RightDoor"
     rightDoor.Size = UDim2.new(0.5, 0, 1, 0)
     rightDoor.Position = UDim2.new(0.5, 0, 0, 0)
-    rightDoor.BackgroundColor3 = Patriot.Theme.Header
+    rightDoor.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     rightDoor.BorderSizePixel = 0
     rightDoor.ZIndex = 51
     rightDoor.Parent = overlay
@@ -911,7 +1001,7 @@ function Patriot:Notify(title, message, duration, iconType)
     frame.BackgroundColor3 = Patriot.Theme.Header
     frame.BorderSizePixel = 0
     frame.Parent = notifGui
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)  -- 更圆的圆角
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 
     local stroke = Instance.new("UIStroke", frame)
     stroke.Color = Patriot.Theme.Accent
@@ -1029,10 +1119,11 @@ local function CreateChangelogPanel(parent, windowWidth, panelHeight, panelWidth
     panel.Size = UDim2.new(0, 0, 0, panelHeight)
     panel.Position = UDim2.new(1, gap, 0, 0)
     panel.BackgroundColor3 = Patriot.Theme.Background
+    panel.BackgroundTransparency = 0.9
     panel.BorderSizePixel = 0
     panel.ClipsDescendants = true
     panel.Parent = mainFrame
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
     local panelStroke = Instance.new("UIStroke", panel)
     panelStroke.Color = Patriot.Theme.Accent
@@ -1203,10 +1294,11 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     panel.Position = UDim2.new(0, -(gap), 0, 0)
     panel.AnchorPoint = Vector2.new(1, 0)
     panel.BackgroundColor3 = Patriot.Theme.Background
+    panel.BackgroundTransparency = 0.9
     panel.BorderSizePixel = 0
     panel.ClipsDescendants = true
     panel.Parent = mainFrame
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
     local panelStroke = Instance.new("UIStroke", panel)
     panelStroke.Color = Patriot.Theme.Accent
@@ -1569,18 +1661,18 @@ local function BuildCenteredUI(windowWidth, windowHeight, panelHeight, userPanel
     mainFrame.Position = UDim2.new(0.5, 0, 0, 0)
     mainFrame.AnchorPoint = Vector2.new(0.5, 0)
     mainFrame.BackgroundColor3 = Patriot.Theme.Background
-    mainFrame.BackgroundTransparency = Patriot.Theme.BackgroundTransparency or 0.85  -- 使用主题透明度
+    mainFrame.BackgroundTransparency = Patriot.Appearance.BackgroundTransparency or 0.75
     mainFrame.BorderSizePixel = 0
-    mainFrame.ClipsDescendants = true  -- 确保圆角生效
+    mainFrame.ClipsDescendants = true
     mainFrame.Parent = container
     local mainCorner = Instance.new("UICorner", mainFrame)
-    mainCorner.CornerRadius = UDim.new(0, 16)  -- 更圆的圆角 (从4改为16)
+    mainCorner.CornerRadius = UDim.new(0, 20)
     
-    -- 添加自定义背景图片
-    ApplyCustomBackground(mainFrame, 16)
+    -- 添加自定义背景
+    ApplyCustomBackground(mainFrame, 20)
     
     -- 添加流动边框
-    local border, borderConn = CreateFlowingBorder(mainFrame, 16)
+    local border, borderConn = CreateFlowingBorder(mainFrame, 20)
     Internal.BorderAnimation = borderConn
 
     local mainStroke = Instance.new("UIStroke", mainFrame)
@@ -1675,7 +1767,7 @@ local function BuildKeyUI()
     header.BorderSizePixel = 0
     header.Active = true
     header.Parent = mainFrame
-    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)  -- 更圆的圆角
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 20)
 
     local headerFix = Instance.new("Frame")
     headerFix.Size = UDim2.new(1, 0, 0, 6)
@@ -1735,7 +1827,7 @@ local function BuildKeyUI()
     statusFrame.BorderSizePixel = 0
     statusFrame.ClipsDescendants = true
     statusFrame.Parent = mainFrame
-    Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
+    Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 12)
 
     local statusStroke = Instance.new("UIStroke", statusFrame)
     statusStroke.Color = Patriot.Theme.Accent
@@ -1774,7 +1866,7 @@ local function BuildKeyUI()
     inputFrame.BorderSizePixel = 0
     inputFrame.ClipsDescendants = true
     inputFrame.Parent = mainFrame
-    Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
+    Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 12)
 
     local inputStroke = Instance.new("UIStroke", inputFrame)
     inputStroke.Color = Patriot.Theme.Accent
@@ -1820,7 +1912,7 @@ local function BuildKeyUI()
         btn.Text = ""
         btn.AutoButtonColor = false
         btn.Parent = mainFrame
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
         local btnStroke = Instance.new("UIStroke", btn)
         btnStroke.Color = isPrimary and Patriot.Theme.AccentHover or Patriot.Theme.Accent
@@ -1878,7 +1970,7 @@ local function BuildKeyUI()
     userBtn.Text = ""
     userBtn.AutoButtonColor = false
     userBtn.Parent = mainFrame
-    Instance.new("UICorner", userBtn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
+    Instance.new("UICorner", userBtn).CornerRadius = UDim.new(0, 10)
 
     local userIcon = Instance.new("ImageLabel")
     userIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -1901,7 +1993,7 @@ local function BuildKeyUI()
     discordBtn.Text = ""
     discordBtn.AutoButtonColor = false
     discordBtn.Parent = mainFrame
-    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
+    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 10)
 
     local discordIcon = Instance.new("ImageLabel")
     discordIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -1924,7 +2016,7 @@ local function BuildKeyUI()
     changelogBtn.Text = ""
     changelogBtn.AutoButtonColor = false
     changelogBtn.Parent = mainFrame
-    Instance.new("UICorner", changelogBtn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
+    Instance.new("UICorner", changelogBtn).CornerRadius = UDim.new(0, 10)
 
     local changelogIcon = Instance.new("ImageLabel")
     changelogIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -1965,7 +2057,7 @@ local function BuildKeyUI()
         shopFrame.Parent = mainFrame
 
         local shopCorner = Instance.new("UICorner", shopFrame)
-        shopCorner.CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
+        shopCorner.CornerRadius = UDim.new(0, 12)
 
         local shopTopFix = Instance.new("Frame")
         shopTopFix.Size = UDim2.new(1, 0, 0, 8)
@@ -1985,7 +2077,7 @@ local function BuildKeyUI()
         shopIconWrapper.BackgroundTransparency = 0.7
         shopIconWrapper.BorderSizePixel = 0
         shopIconWrapper.Parent = shopFrame
-        Instance.new("UICorner", shopIconWrapper).CornerRadius = UDim.new(0, 8)  -- 更圆的圆角
+        Instance.new("UICorner", shopIconWrapper).CornerRadius = UDim.new(0, 8)
 
         local shopIconStroke = Instance.new("UIStroke", shopIconWrapper)
         shopIconStroke.Color = Patriot.Theme.Accent
@@ -2039,7 +2131,7 @@ local function BuildKeyUI()
         buyBtn.Text = ""
         buyBtn.AutoButtonColor = false
         buyBtn.Parent = shopFrame
-        Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 8)  -- 更圆的圆角
+        Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 8)
 
         local buyBtnStroke = Instance.new("UIStroke", buyBtn)
         buyBtnStroke.Color = Patriot.Theme.AccentHover
@@ -2185,13 +2277,15 @@ local function BuildKeyUI()
     textBox.FocusLost:Connect(function(enter) if enter then handleRedeem() end end)
 
     setupDragging(header, container)
-    TweenService:Create(container, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, 0, 0.45, 0)}):Play()
-    task.wait(0.6)
+    
     doors.open(function()
         task.wait(0.2)
         ui.toggleUser(userIcon)
-        if #Patriot.Changelog > 0 then task.wait(0.3) ui.toggleCL(changelogIcon) end
+        task.wait(0.2)
+        if #Patriot.Changelog > 0 then ui.toggleCL(changelogIcon) end
     end)
+    
+    TweenService:Create(container, TweenInfo.new(0.6, Enum.EasingStyle.Quart), {Position = UDim2.new(0.5, 0, 0.45, 0)}):Play()
 end
 
 function Patriot:Launch()
@@ -2205,20 +2299,24 @@ function Patriot:Launch()
         getgenv().SCRIPT_KEY = nil
     end
     getgenv().PatriotClosed = false
-    EnsureIconsReady(function()
-        if Patriot.Storage.AutoLoad and Internal.ValidateFunction then
-            local savedKey = loadKey()
-            if savedKey and savedKey ~= "" then
-                Patriot:Notify("检查中", "验证保存的密钥...", 2, "shield") task.wait(0.5)
-                if validateKey(savedKey, Internal.ValidateFunction) then
-                    getgenv().SCRIPT_KEY = savedKey
-                    Patriot:Notify("欢迎回来", "密钥验证成功", 2, "success")
-                    if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end return
-                else clearKey() Patriot:Notify("已过期", "保存的密钥已失效", 3, "warning") task.wait(1) end
+    
+    -- 显示开头动画
+    ShowSplashScreen(function()
+        EnsureIconsReady(function()
+            if Patriot.Storage.AutoLoad and Internal.ValidateFunction then
+                local savedKey = loadKey()
+                if savedKey and savedKey ~= "" then
+                    Patriot:Notify("检查中", "验证保存的密钥...", 2, "shield") task.wait(0.5)
+                    if validateKey(savedKey, Internal.ValidateFunction) then
+                        getgenv().SCRIPT_KEY = savedKey
+                        Patriot:Notify("欢迎回来", "密钥验证成功", 2, "success")
+                        if Patriot.Callbacks.OnSuccess then Patriot.Callbacks.OnSuccess() end return
+                    else clearKey() Patriot:Notify("已过期", "保存的密钥已失效", 3, "warning") task.wait(1) end
+                end
             end
-        end
-        BuildKeyUI()
-        while not getgenv().SCRIPT_KEY do task.wait(0.1) end
+            BuildKeyUI()
+            while not getgenv().SCRIPT_KEY do task.wait(0.1) end
+        end)
     end)
 end
 
