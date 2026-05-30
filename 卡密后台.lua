@@ -43,7 +43,10 @@ Patriot.Appearance = {
     Title = "验证系统",
     Subtitle = "请输入密钥以继续",
     Icon = "rbxassetid://95721401302279",
-    IconSize = UDim2.new(0, 30, 0, 30)
+    IconSize = UDim2.new(0, 30, 0, 30),
+    -- 自定义背景图片ID (设置为空字符串则使用纯色背景)
+    BackgroundImage = "rbxassetid://87099566895194",  -- 使用你提供的图片ID
+    BackgroundTransparency = 0.85  -- 背景透明度 (0-1, 0为完全不透明, 1为完全透明)
 }
 
 -- 链接
@@ -62,14 +65,17 @@ Patriot.Storage = {
 -- 选项
 Patriot.Options = {
     Blur = true,
-    Draggable = true
+    Draggable = true,
+    -- 流动边框动画速度 (秒每循环)
+    BorderSpeed = 3
 }
 
 -- 主题色
 Patriot.Theme = {
-    Accent = Color3.fromRGB(139, 0, 0),
-    AccentHover = Color3.fromRGB(170, 20, 20),
+    Accent = Color3.fromRGB(255, 255, 255),  -- 白色
+    AccentHover = Color3.fromRGB(200, 200, 200),
     Background = Color3.fromRGB(15, 15, 15),
+    BackgroundTransparency = 0.85,
     Header = Color3.fromRGB(20, 20, 20),
     Input = Color3.fromRGB(25, 25, 25),
     Text = Color3.fromRGB(255, 255, 255),
@@ -108,7 +114,8 @@ Patriot.Shop = {
 local Internal = {
     NotificationList = {},
     ValidateFunction = nil,
-    IconsLoaded = false
+    IconsLoaded = false,
+    BorderAnimation = nil
 }
 
 local IconBaseURL = "https://github.com/Cobruhehe/expert-octo-doodle/tree/main/"
@@ -357,6 +364,10 @@ local function fullCleanup()
     getgenv().PatriotLoaded = false
     getgenv().PatriotClosed = true
     disableBlur()
+    if Internal.BorderAnimation then
+        Internal.BorderAnimation:Disconnect()
+        Internal.BorderAnimation = nil
+    end
     local gui1 = hui:FindFirstChild("PatriotKeySystem")
     local gui3 = hui:FindFirstChild("PatriotLoadingScreen")
     if gui1 then gui1:Destroy() end
@@ -400,6 +411,144 @@ local function validateKey(key, validateFunc)
     if type(result) == "table" then return result.valid == true end
     if type(result) == "boolean" then return result end
     return false
+end
+
+-- 创建黑白流动边框效果
+local function CreateFlowingBorder(parent, cornerRadius)
+    local borderContainer = Instance.new("Frame")
+    borderContainer.Name = "FlowingBorder"
+    borderContainer.Size = UDim2.new(1, 4, 1, 4)
+    borderContainer.Position = UDim2.new(0, -2, 0, -2)
+    borderContainer.BackgroundTransparency = 1
+    borderContainer.ZIndex = parent.ZIndex - 1
+    borderContainer.Parent = parent
+    
+    -- 创建四个方向的渐变条
+    local topBar = Instance.new("Frame")
+    topBar.Size = UDim2.new(1, 0, 0, 3)
+    topBar.Position = UDim2.new(0, 0, 0, 0)
+    topBar.BackgroundTransparency = 1
+    topBar.Parent = borderContainer
+    
+    local topGradient = Instance.new("UIGradient", topBar)
+    topGradient.Rotation = 0
+    
+    local bottomBar = Instance.new("Frame")
+    bottomBar.Size = UDim2.new(1, 0, 0, 3)
+    bottomBar.Position = UDim2.new(0, 0, 1, -3)
+    bottomBar.BackgroundTransparency = 1
+    bottomBar.Parent = borderContainer
+    
+    local bottomGradient = Instance.new("UIGradient", bottomBar)
+    bottomGradient.Rotation = 180
+    
+    local leftBar = Instance.new("Frame")
+    leftBar.Size = UDim2.new(0, 3, 1, 0)
+    leftBar.Position = UDim2.new(0, 0, 0, 0)
+    leftBar.BackgroundTransparency = 1
+    leftBar.Parent = borderContainer
+    
+    local leftGradient = Instance.new("UIGradient", leftBar)
+    leftGradient.Rotation = 90
+    
+    local rightBar = Instance.new("Frame")
+    rightBar.Size = UDim2.new(0, 3, 1, 0)
+    rightBar.Position = UDim2.new(1, -3, 0, 0)
+    rightBar.BackgroundTransparency = 1
+    rightBar.Parent = borderContainer
+    
+    local rightGradient = Instance.new("UIGradient", rightBar)
+    rightGradient.Rotation = 270
+    
+    -- 创建圆角遮罩
+    local mask = Instance.new("Frame")
+    mask.Size = UDim2.new(1, -4, 1, -4)
+    mask.Position = UDim2.new(0, 2, 0, 2)
+    mask.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    mask.BackgroundTransparency = 0.5
+    mask.BorderSizePixel = 0
+    mask.Parent = borderContainer
+    local maskCorner = Instance.new("UICorner", mask)
+    maskCorner.CornerRadius = UDim.new(0, cornerRadius - 2)
+    
+    -- 动画变量
+    local offset = 0
+    local speed = Patriot.Options.BorderSpeed or 3
+    
+    -- 更新渐变位置
+    local function updateGradients()
+        topGradient.Offset = NumberSequence.new({
+            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
+        })
+        
+        bottomGradient.Offset = NumberSequence.new({
+            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
+        })
+        
+        leftGradient.Offset = NumberSequence.new({
+            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
+        })
+        
+        rightGradient.Offset = NumberSequence.new({
+            NumberSequenceKeypoint.new(offset, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.15, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 0.3, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.7, Color3.fromRGB(0, 0, 0), 0),
+            NumberSequenceKeypoint.new(offset + 0.85, Color3.fromRGB(255, 255, 255), 1),
+            NumberSequenceKeypoint.new(offset + 1, Color3.fromRGB(0, 0, 0), 0)
+        })
+        
+        offset = (offset + 0.008) % 1
+    end
+    
+    -- 启动动画
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if parent and parent.Parent then
+            updateGradients()
+        else
+            connection:Disconnect()
+        end
+    end)
+    
+    return borderContainer, connection
+end
+
+-- 添加自定义背景
+local function ApplyCustomBackground(frame, cornerRadius)
+    if Patriot.Appearance.BackgroundImage and Patriot.Appearance.BackgroundImage ~= "" then
+        local bgImage = Instance.new("ImageLabel")
+        bgImage.Name = "CustomBackground"
+        bgImage.Size = UDim2.new(1, 0, 1, 0)
+        bgImage.Position = UDim2.new(0, 0, 0, 0)
+        bgImage.BackgroundTransparency = 1
+        bgImage.Image = Patriot.Appearance.BackgroundImage
+        bgImage.ImageTransparency = Patriot.Appearance.BackgroundTransparency or 0.85
+        bgImage.ScaleType = Enum.ScaleType.Crop
+        bgImage.ZIndex = 0
+        bgImage.Parent = frame
+        
+        local bgCorner = Instance.new("UICorner", bgImage)
+        bgCorner.CornerRadius = UDim.new(0, cornerRadius)
+        
+        return bgImage
+    end
+    return nil
 end
 
 local function CreateDoorOverlay(parentFrame, width, height)
@@ -762,7 +911,7 @@ function Patriot:Notify(title, message, duration, iconType)
     frame.BackgroundColor3 = Patriot.Theme.Header
     frame.BorderSizePixel = 0
     frame.Parent = notifGui
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)  -- 更圆的圆角
 
     local stroke = Instance.new("UIStroke", frame)
     stroke.Color = Patriot.Theme.Accent
@@ -883,7 +1032,7 @@ local function CreateChangelogPanel(parent, windowWidth, panelHeight, panelWidth
     panel.BorderSizePixel = 0
     panel.ClipsDescendants = true
     panel.Parent = mainFrame
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
 
     local panelStroke = Instance.new("UIStroke", panel)
     panelStroke.Color = Patriot.Theme.Accent
@@ -895,7 +1044,7 @@ local function CreateChangelogPanel(parent, windowWidth, panelHeight, panelWidth
     panelHeader.BackgroundColor3 = Patriot.Theme.Header
     panelHeader.BorderSizePixel = 0
     panelHeader.Parent = panel
-    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 12)
 
     local panelHeaderFix = Instance.new("Frame")
     panelHeaderFix.Size = UDim2.new(1, 0, 0, 8)
@@ -1057,7 +1206,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     panel.BorderSizePixel = 0
     panel.ClipsDescendants = true
     panel.Parent = mainFrame
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
 
     local panelStroke = Instance.new("UIStroke", panel)
     panelStroke.Color = Patriot.Theme.Accent
@@ -1069,7 +1218,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     panelHeader.BackgroundColor3 = Patriot.Theme.Header
     panelHeader.BorderSizePixel = 0
     panelHeader.Parent = panel
-    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", panelHeader).CornerRadius = UDim.new(0, 12)
 
     local panelHeaderFix = Instance.new("Frame")
     panelHeaderFix.Size = UDim2.new(1, 0, 0, 8)
@@ -1151,7 +1300,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     avatarGlow.BackgroundTransparency = 0.5
     avatarGlow.BorderSizePixel = 0
     avatarGlow.Parent = avatarWrapper
-    Instance.new("UICorner", avatarGlow).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", avatarGlow).CornerRadius = UDim.new(0, 8)
 
     local avatarGlowStroke = Instance.new("UIStroke", avatarGlow)
     avatarGlowStroke.Color = Patriot.Theme.Accent
@@ -1166,7 +1315,7 @@ local function CreateUserInfoPanel(parent, windowWidth, panelHeight, panelWidth,
     avatarContainer.BorderSizePixel = 0
     avatarContainer.ClipsDescendants = true
     avatarContainer.Parent = avatarWrapper
-    Instance.new("UICorner", avatarContainer).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", avatarContainer).CornerRadius = UDim.new(0, 8)
 
     local avatarImage = Instance.new("ImageLabel")
     avatarImage.Size = UDim2.new(1, 0, 1, 0)
@@ -1420,9 +1569,19 @@ local function BuildCenteredUI(windowWidth, windowHeight, panelHeight, userPanel
     mainFrame.Position = UDim2.new(0.5, 0, 0, 0)
     mainFrame.AnchorPoint = Vector2.new(0.5, 0)
     mainFrame.BackgroundColor3 = Patriot.Theme.Background
+    mainFrame.BackgroundTransparency = Patriot.Theme.BackgroundTransparency or 0.85  -- 使用主题透明度
     mainFrame.BorderSizePixel = 0
+    mainFrame.ClipsDescendants = true  -- 确保圆角生效
     mainFrame.Parent = container
-    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 4)
+    local mainCorner = Instance.new("UICorner", mainFrame)
+    mainCorner.CornerRadius = UDim.new(0, 16)  -- 更圆的圆角 (从4改为16)
+    
+    -- 添加自定义背景图片
+    ApplyCustomBackground(mainFrame, 16)
+    
+    -- 添加流动边框
+    local border, borderConn = CreateFlowingBorder(mainFrame, 16)
+    Internal.BorderAnimation = borderConn
 
     local mainStroke = Instance.new("UIStroke", mainFrame)
     mainStroke.Color = Patriot.Theme.Accent
@@ -1516,7 +1675,7 @@ local function BuildKeyUI()
     header.BorderSizePixel = 0
     header.Active = true
     header.Parent = mainFrame
-    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)  -- 更圆的圆角
 
     local headerFix = Instance.new("Frame")
     headerFix.Size = UDim2.new(1, 0, 0, 6)
@@ -1576,7 +1735,7 @@ local function BuildKeyUI()
     statusFrame.BorderSizePixel = 0
     statusFrame.ClipsDescendants = true
     statusFrame.Parent = mainFrame
-    Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", statusFrame).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
 
     local statusStroke = Instance.new("UIStroke", statusFrame)
     statusStroke.Color = Patriot.Theme.Accent
@@ -1615,7 +1774,7 @@ local function BuildKeyUI()
     inputFrame.BorderSizePixel = 0
     inputFrame.ClipsDescendants = true
     inputFrame.Parent = mainFrame
-    Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
 
     local inputStroke = Instance.new("UIStroke", inputFrame)
     inputStroke.Color = Patriot.Theme.Accent
@@ -1661,7 +1820,7 @@ local function BuildKeyUI()
         btn.Text = ""
         btn.AutoButtonColor = false
         btn.Parent = mainFrame
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
 
         local btnStroke = Instance.new("UIStroke", btn)
         btnStroke.Color = isPrimary and Patriot.Theme.AccentHover or Patriot.Theme.Accent
@@ -1719,7 +1878,7 @@ local function BuildKeyUI()
     userBtn.Text = ""
     userBtn.AutoButtonColor = false
     userBtn.Parent = mainFrame
-    Instance.new("UICorner", userBtn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", userBtn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
 
     local userIcon = Instance.new("ImageLabel")
     userIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -1742,7 +1901,7 @@ local function BuildKeyUI()
     discordBtn.Text = ""
     discordBtn.AutoButtonColor = false
     discordBtn.Parent = mainFrame
-    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
 
     local discordIcon = Instance.new("ImageLabel")
     discordIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -1765,7 +1924,7 @@ local function BuildKeyUI()
     changelogBtn.Text = ""
     changelogBtn.AutoButtonColor = false
     changelogBtn.Parent = mainFrame
-    Instance.new("UICorner", changelogBtn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", changelogBtn).CornerRadius = UDim.new(0, 10)  -- 更圆的圆角
 
     local changelogIcon = Instance.new("ImageLabel")
     changelogIcon.Size = UDim2.new(0, 18, 0, 18)
@@ -1806,7 +1965,7 @@ local function BuildKeyUI()
         shopFrame.Parent = mainFrame
 
         local shopCorner = Instance.new("UICorner", shopFrame)
-        shopCorner.CornerRadius = UDim.new(0, 4)
+        shopCorner.CornerRadius = UDim.new(0, 12)  -- 更圆的圆角
 
         local shopTopFix = Instance.new("Frame")
         shopTopFix.Size = UDim2.new(1, 0, 0, 8)
@@ -1826,7 +1985,7 @@ local function BuildKeyUI()
         shopIconWrapper.BackgroundTransparency = 0.7
         shopIconWrapper.BorderSizePixel = 0
         shopIconWrapper.Parent = shopFrame
-        Instance.new("UICorner", shopIconWrapper).CornerRadius = UDim.new(0, 4)
+        Instance.new("UICorner", shopIconWrapper).CornerRadius = UDim.new(0, 8)  -- 更圆的圆角
 
         local shopIconStroke = Instance.new("UIStroke", shopIconWrapper)
         shopIconStroke.Color = Patriot.Theme.Accent
@@ -1880,7 +2039,7 @@ local function BuildKeyUI()
         buyBtn.Text = ""
         buyBtn.AutoButtonColor = false
         buyBtn.Parent = shopFrame
-        Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 4)
+        Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 8)  -- 更圆的圆角
 
         local buyBtnStroke = Instance.new("UIStroke", buyBtn)
         buyBtnStroke.Color = Patriot.Theme.AccentHover
